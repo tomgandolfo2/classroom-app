@@ -1,0 +1,92 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "sqlite" // You can switch to PostgreSQL or another DB provider
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Student {
+  id         Int        @id @default(autoincrement())
+  name       String
+  status     String
+  feedback   Feedback[]
+  grades     Grade[]
+  attendance Attendance[]
+  attempts   Attempt[]
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  response  String
+  comment   String?
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id])
+}
+
+model Grade {
+  id        Int      @id @default(autoincrement())
+  subject   String
+  score     Float
+  date      DateTime @default(now())
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id])
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @default(now())
+  status    String   // present, absent, late
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id])
+}
+
+model Whitelist {
+  id  Int     @id @default(autoincrement())
+  url String  @unique
+}
+
+model Class {
+  id                Int      @id @default(autoincrement())
+  subject           String
+  date              DateTime
+  time              String
+  location          String
+  isRecurring       Boolean
+  recurrencePattern String
+  quizzes           Quiz[]   // Relationship with Quiz model
+}
+
+model Quiz {
+  id        Int       @id @default(autoincrement())
+  title     String
+  dueDate   DateTime
+  isTimed   Boolean
+  timeLimit Int
+  questions Question[]
+  classId   Int
+  class     Class     @relation(fields: [classId], references: [id])
+  attempts  Attempt[]
+}
+
+model Question {
+  id            Int      @id @default(autoincrement())
+  text          String
+  type          String   // e.g., multiple-choice, true-false, short-answer
+  options       String   // Store JSON as a string
+  correctAnswer String
+  quizId        Int
+  Quiz          Quiz     @relation(fields: [quizId], references: [id])
+}
+
+model Attempt {
+  id        Int      @id @default(autoincrement())
+  score     Int
+  quizId    Int
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id])
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+}
