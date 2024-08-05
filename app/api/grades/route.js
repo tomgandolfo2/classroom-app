@@ -9,6 +9,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const studentId = searchParams.get("studentId"); // Get the studentId from query params
 
+  // Check for missing studentId
   if (!studentId) {
     return NextResponse.json({ error: "Missing studentId" }, { status: 400 });
   }

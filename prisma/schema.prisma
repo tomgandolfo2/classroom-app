@@ -1,92 +1,78 @@
 // prisma/schema.prisma
 
-datasource db {
-  provider = "sqlite" // You can switch to PostgreSQL or another DB provider
-  url      = "file:./dev.db"
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
 model Student {
-  id         Int        @id @default(autoincrement())
+  id         Int          @id @default(autoincrement())
   name       String
-  status     String
-  feedback   Feedback[]
+  email      String       @unique
   grades     Grade[]
   attendance Attendance[]
-  attempts   Attempt[]
+  classes    Class[]
 }
 
-model Feedback {
-  id        Int      @id @default(autoincrement())
-  response  String
-  comment   String?
-  studentId Int
-  student   Student  @relation(fields: [studentId], references: [id])
-}
-
-model Grade {
-  id        Int      @id @default(autoincrement())
-  subject   String
-  score     Float
-  date      DateTime @default(now())
-  studentId Int
-  student   Student  @relation(fields: [studentId], references: [id])
-}
-
-model Attendance {
-  id        Int      @id @default(autoincrement())
-  date      DateTime @default(now())
-  status    String   // present, absent, late
-  studentId Int
-  student   Student  @relation(fields: [studentId], references: [id])
-}
-
-model Whitelist {
-  id  Int     @id @default(autoincrement())
-  url String  @unique
+model Teacher {
+  id      Int     @id @default(autoincrement())
+  name    String
+  email   String   @unique
+  classes Class[]
 }
 
 model Class {
-  id                Int      @id @default(autoincrement())
-  subject           String
-  date              DateTime
-  time              String
-  location          String
-  isRecurring       Boolean
+  id                Int          @id @default(autoincrement())
+  name              String
+  description       String
   recurrencePattern String
-  quizzes           Quiz[]   // Relationship with Quiz model
+  quizzes           Quiz[]
+  students          Student[]
+  teachers          Teacher[]
+  grades            Grade[]
+  attendance        Attendance[]
 }
 
 model Quiz {
-  id        Int       @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   title     String
   dueDate   DateTime
   isTimed   Boolean
   timeLimit Int
-  questions Question[]
+  class     Class      @relation(fields: [classId], references: [id])
   classId   Int
-  class     Class     @relation(fields: [classId], references: [id])
-  attempts  Attempt[]
+  questions Question[]
 }
 
 model Question {
-  id            Int      @id @default(autoincrement())
+  id            Int    @id @default(autoincrement())
   text          String
-  type          String   // e.g., multiple-choice, true-false, short-answer
-  options       String   // Store JSON as a string
+  type          String // e.g., multiple-choice, true-false, short-answer
+  options       String // Changed to String for SQLite compatibility
   correctAnswer String
+  quiz          Quiz   @relation(fields: [quizId], references: [id])
   quizId        Int
-  Quiz          Quiz     @relation(fields: [quizId], references: [id])
 }
 
-model Attempt {
-  id        Int      @id @default(autoincrement())
-  score     Int
-  quizId    Int
+model Grade {
+  id        Int     @id @default(autoincrement())
+  value     Int
+  student   Student @relation(fields: [studentId], references: [id])
   studentId Int
+  class     Class   @relation(fields: [classId], references: [id])
+  classId   Int
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  present   Boolean
   student   Student  @relation(fields: [studentId], references: [id])
-  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  studentId Int
+  class     Class    @relation(fields: [classId], references: [id])
+  classId   Int
 }
